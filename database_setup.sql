@@ -47,11 +47,12 @@ INSERT INTO jobs (
 	processed,
 	processed_at
 ) values
-('job/test/topic', '{"Job": "TestValue"}', now(), false, null),
-('job/test/topic', '{"Job": "TestValue"}', now(), false, null),
-('job/test/topic', '{"Job": "TestValue"}', now(), false, null),
-('job/test/topic', '{"Job": "TestValue"}', now(), false, null),
-('job/test/topic', '{"Job": "TestValue"}', now(), false, null);
+('job/test/topic', '{"Job": "TestValue5"}', now(), false, null),
+('job/test/topic', '{"Job": "TestValue6"}', now(), false, null),
+('job/test/topic', '{"Job": "TestValue4"}', now() + INTERVAL '1 second', false, null),
+('job/test/topic', '{"Job": "TestValue3"}', now() + INTERVAL '2 second', false, null),
+('job/test/topic', '{"Job": "TestValue2"}', now() + INTERVAL '4 second', false, null),
+('job/test/topic', '{"Job": "TestValue1"}', now() + INTERVAL '3 second', false, null);
 
 ------ Read test data -------
 SELECT COUNT(*) FROM jobs;

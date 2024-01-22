@@ -31,36 +31,11 @@ public class Job
 
 public class JobCollection
 {
-    public SortedDictionary<BigInteger, Job> Jobs { get; set; }
-
-    // public JobCollection(List<Dictionary<string, object>> jobs)
-    // {
-    //     Jobs = new SortedDictionary<DateTime, Job> ();
-    //     foreach (Dictionary<string, object> job in jobs)
-    //     {
-    //         Jobs[TimeUtility.GetUtcTimestampFromString((string)job["fire_at"])] = new Job(
-    //             (BigInteger)job["id"],
-    //             (string)job["topic"],
-    //             (string)job["payload"],
-    //             (string)job["fire_at"],
-    //             (bool)job["processed"],
-    //             (string)job["processed_at"]
-    //         );
-    //     }
-    // }
-
-    public JobCollection(List<Job> jobs)
-    {
-        Jobs = new SortedDictionary<DateTime, Job> ();
-        foreach (Job job in jobs)
-        {
-            Jobs[job.FireAt] = job;
-        }
-    }
+    public Dictionary<BigInteger, Job> Jobs { get; set; }
 
     public JobCollection()
     {
-        Jobs = new SortedDictionary<BigInteger, Job> ();
+        Jobs = new Dictionary<BigInteger, Job> ();
     }
 
     public void LoadJob(Job job)
@@ -70,9 +45,9 @@ public class JobCollection
 
     public IEnumerable<Job> GetJobs()
     {
-        foreach (var jobEntry in Jobs)
+        foreach (var job in Jobs.OrderBy(pair => pair.Value.FireAt))
         {
-            yield return jobEntry.Value;
+            yield return job.Value;
         }
     }
 
