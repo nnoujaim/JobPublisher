@@ -1,44 +1,43 @@
 using JobPublisher.Database;
-using Npgsql;
-using JobPublisher.Dto;
+using JobPublisher.Mqtt;
+using JobPublisher.Repository;
+
+using MQTTnet;
 
 namespace JobPublisher;
 
 public class JobPublisher
 {
-    private readonly IPostgresConnectionFactory ConnectionFactory;
-    private readonly IReader Reader;
-    private readonly IWriter Writer;
+    private PostgresConfig PgConfig;
+    private MqttClientConfig MqttConfig;
+    private PublisherConfig PublisherConfig;
+    private JobHandler? JobHandler;
+    private LoopHandler? LoopHandler;
 
-    public JobPublisher(IPostgresConnectionFactory connectionFactory, IReader reader, IWriter writer)
+    public JobPublisher(PostgresConfig pgConfig, MqttClientConfig mqttConfig, PublisherConfig publisherConfig)
     {
-        ConnectionFactory = connectionFactory;
-        Reader = reader;
-        Writer = writer;
+        PgConfig = pgConfig;
+        MqttConfig = mqttConfig;
+        PublisherConfig = publisherConfig;
     }
 
-    public async Task ReadAndPublish()
+    public async Task Initialize()
     {
-        using (NpgsqlConnection conn = ConnectionFactory.GetConnection())
-        {
-            conn.Open();
-            NpgsqlTransaction tx = conn.BeginTransaction();
-            try
-            {
-                JobCollection? jobs = Reader.Read(conn);
-                if (jobs is not null)
-                {
-                    await Writer.WriteAsync(jobs);
-                    tx.Commit();
-                }
-            }
-            catch (Exception exception)
-            {
-                tx.Rollback();
-                Console.WriteLine("Exception");
-                Console.WriteLine(exception);
-            }
-            conn.Close();
-        }
+        PostgresConnectionFactory connectionFactory = new PostgresConnectionFactory(PgConfig);
+        Reader reader = new Reader(new JobRespository(), PublisherConfig);
+
+        MqttConnection mqtt = new MqttConnection(new MqttFactory(), MqttConfig);
+        await mqtt.Connect();
+
+        JobHandler = new JobHandler(connectionFactory, reader, new Writer(mqtt));
+        LoopHandler = new LoopHandler(JobHandler, PublisherConfig);
+    }
+
+    public async Task Run()
+    {
+        await Initialize();
+        #nullable disable
+        await LoopHandler.LoopForever();
+        #nullable enable
     }
 }

@@ -8,25 +8,19 @@ namespace JobPublisher;
 public class Reader : IReader
 {
     private readonly IJobRespository Repository;
-    private int JobsAtATime;
-    private int LookbackSeconds;
-    private int LookaheadSeconds;
     public BigInteger JobsRead { get; private set; } = 0;
     public int ReadCount { get; private set; } = 0;
-    public BigInteger StopAfter;
+    public PublisherConfig Config;
 
-    public Reader(IJobRespository respository, int jobsAtATime, int lookbackSeconds, int lookaheadSeconds, int stopAfter = 0)
+    public Reader(IJobRespository respository, PublisherConfig config)
     {
         Repository = respository;
-        JobsAtATime = jobsAtATime;
-        LookbackSeconds = lookbackSeconds;
-        LookaheadSeconds = lookaheadSeconds;
-        StopAfter = (BigInteger)stopAfter;
+        Config = config;
     }
 
     public JobCollection? Read(NpgsqlConnection conn)
     {
-        JobCollection? jobs = Repository.GetAndResolveJobs(conn, GetRowsToRead(), LookbackSeconds, LookaheadSeconds);
+        JobCollection? jobs = Repository.GetAndResolveJobs(conn, GetRowsToRead(), Config);
         if (jobs is not null) IncrementCounts(jobs);
         return jobs;
     }
@@ -41,7 +35,13 @@ public class Reader : IReader
 
     private int GetRowsToRead()
     {
-        if (StopAfter == 0) return JobsAtATime;
-        return (int)(StopAfter - JobsRead);
+        if (Config.MaxReads == 0) return Config.NumJobsPerRead;
+        return (int)(Config.MaxReads - JobsRead);
+    }
+
+    public bool ReadLimitReached()
+    {
+        if (Config.MaxReads == 0) return false;
+        return (int)JobsRead >= (int)Config.MaxReads;
     }
 }

@@ -14,26 +14,17 @@ class Program
 {
     public static async Task Main(string[] args)
     {
-        // Setup job reader
+        int jobsPerRead = int.Parse(args[0]);
+        int loopFrequencyMs = int.Parse(args[1]);
+        int consumerCount = int.Parse(args[2]);
+        int consumerIndex = int.Parse(args[3]);
+        int maxReads = int.Parse(args[4]);
+
         PostgresConfig pgConfig = new PostgresConfig("postgres", "postgres", 5432, "localhost", "postgres");
-        PostgresConnectionFactory connectionFactory = new PostgresConnectionFactory(pgConfig);
-        JobRespository repository = new JobRespository();
-        Reader reader = new Reader(repository, 4, 600, 5);
-
-        // Setup job writer
         MqttClientConfig mqttConfig = new MqttClientConfig("test", "test", 1883, "localhost");
-        MqttConnection mqtt = new MqttConnection(new MqttFactory(), mqttConfig);
-        await mqtt.Connect();
-        Writer writer = new Writer(mqtt);
+        PublisherConfig publisherConfig = new PublisherConfig(jobsPerRead, loopFrequencyMs, consumerCount, consumerIndex, maxReads);
 
-
-        JobPublisher loop = new JobPublisher(connectionFactory, reader, writer);
-        await loop.ReadAndPublish();
-        await loop.ReadAndPublish();
-
-
-        // LoopHandler loop = new LoopHandler(connectionFactory, reader, writer);
-        // await loop.ReadAndPublish();
-
+        JobPublisher publisher = new JobPublisher(pgConfig, mqttConfig, publisherConfig);
+        await publisher.Run();
     }
 }

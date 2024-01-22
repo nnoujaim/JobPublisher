@@ -7,4 +7,5 @@ namespace JobPublisher;
 public interface IReader
 {
     public JobCollection? Read(NpgsqlConnection conn);
+    public bool ReadLimitReached();
 }

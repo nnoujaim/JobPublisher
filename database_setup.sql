@@ -32,8 +32,8 @@ INSERT INTO jobs (
 	processed,
 	processed_at
 ) VALUES (
-	'job1/test/topic',
-	'{"Job1": "TestValue4"}',
+	'job/test/topic',
+	'{"Job": "TestValue"}',
 	now(),
 	false,
 	null
@@ -52,7 +52,8 @@ INSERT INTO jobs (
 ('job/test/topic', '{"Job": "TestValue4"}', now() + INTERVAL '1 second', false, null),
 ('job/test/topic', '{"Job": "TestValue3"}', now() + INTERVAL '2 second', false, null),
 ('job/test/topic', '{"Job": "TestValue2"}', now() + INTERVAL '4 second', false, null),
-('job/test/topic', '{"Job": "TestValue1"}', now() + INTERVAL '3 second', false, null);
+('job/test/topic', '{"Job": "TestValue1"}', now() + INTERVAL '3 second', false, null),
+('job/test/topic', '{"Job": "7"}', now() + INTERVAL '7 second', false, null);
 
 ------ Read test data -------
 SELECT COUNT(*) FROM jobs;
@@ -60,15 +61,16 @@ SELECT COUNT(*) FROM jobs WHERE processed = false;
 
 SELECT * FROM jobs;
 SELECT * FROM jobs ORDER BY fire_at;
+SELECT * FROM jobs ORDER BY id;
 SELECT
-id,
-topic,
-payload,
-fire_at,
-fire_at AT TIME ZONE 'UTC' AS fire_at_utc,
-processed,
-processed_at,
-processed_at AT TIME ZONE 'UTC' AS processed_at_utc
+	id,
+	topic,
+	payload,
+	fire_at,
+	fire_at AT TIME ZONE 'UTC' AS fire_at_utc,
+	processed,
+	processed_at,
+	processed_at AT TIME ZONE 'UTC' AS processed_at_utc
 FROM jobs;
 
 ------ Run program logic selector -------
@@ -77,6 +79,29 @@ FROM jobs
 WHERE processed = false
 AND fire_at AT TIME ZONE 'UTC' > now() AT TIME ZONE 'UTC' - INTERVAL '10 min'
 AND fire_at AT TIME ZONE 'UTC' < now() AT TIME ZONE 'UTC' + INTERVAL '10 min'
+ORDER BY fire_at ASC
+LIMIT 10;
+
+------ Run partitioned program logic selector -------
+-- All
+SELECT id
+FROM jobs
+WHERE processed = false
+AND fire_at AT TIME ZONE 'UTC' > now() AT TIME ZONE 'UTC' - INTERVAL '10 min'
+AND fire_at AT TIME ZONE 'UTC' < now() AT TIME ZONE 'UTC' + INTERVAL '10 min'
+AND id % 1 = 0
+ORDER BY fire_at ASC
+LIMIT 10;
+
+-- 3 consumers
+SELECT id
+FROM jobs
+WHERE processed = false
+AND fire_at AT TIME ZONE 'UTC' > now() AT TIME ZONE 'UTC' - INTERVAL '10 min'
+AND fire_at AT TIME ZONE 'UTC' < now() AT TIME ZONE 'UTC' + INTERVAL '10 min'
+AND id % 3 = 0
+-- AND id % 3 = 1
+-- AND id % 3 = 2
 ORDER BY fire_at ASC
 LIMIT 10;
 

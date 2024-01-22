@@ -1,44 +1,26 @@
-using JobPublisher.Database;
-using Npgsql;
-using JobPublisher.Dto;
-
 namespace JobPublisher;
 
 public class LoopHandler
 {
-    private readonly IPostgresConnectionFactory ConnectionFactory;
-    private readonly IReader Reader;
-    private readonly IWriter Writer;
+    private readonly JobHandler Handler;
+    private readonly PublisherConfig Config;
 
-    public LoopHandler(IPostgresConnectionFactory connectionFactory, IReader reader, IWriter writer)
+    public LoopHandler(JobHandler handler, PublisherConfig config)
     {
-        ConnectionFactory = connectionFactory;
-        Reader = reader;
-        Writer = writer;
+        Handler = handler;
+        Config = config;
     }
 
-    public async Task ReadAndPublish()
+    public async Task LoopForever()
     {
-        using (NpgsqlConnection conn = ConnectionFactory.GetConnection())
+        await Task.Run(async () =>
         {
-            conn.Open();
-            NpgsqlTransaction tx = conn.BeginTransaction();
-            try
+            while (!Handler.ReadLimitReached())
             {
-                JobCollection? jobs = Reader.Read(conn);
-                if (jobs is not null)
-                {
-                    await Writer.WriteAsync(jobs);
-                    tx.Commit();
-                }
+                Console.WriteLine("Read and publish at: " + DateTime.Now.ToString(TimeUtility.Format));
+                await Handler.ReadAndPublish();
+                await Task.Delay(Config.LoopFrequencyMs);
             }
-            catch (Exception exception)
-            {
-                tx.Rollback();
-                Console.WriteLine("Exception");
-                Console.WriteLine(exception);
-            }
-            conn.Close();
-        }
+        });
     }
 }

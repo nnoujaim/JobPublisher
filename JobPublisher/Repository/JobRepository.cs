@@ -1,22 +1,25 @@
 using Npgsql;
 using JobPublisher.Dto;
+using JobPublisher;
 using System.Numerics;
 
 namespace JobPublisher.Repository;
 
 public class JobRespository : IJobRespository
 {
-    public JobCollection? GetAndResolveJobs(NpgsqlConnection conn, int numRows, int lookbackSeconds, int lookaheadSeconds)
+    public JobCollection? GetAndResolveJobs(NpgsqlConnection conn, int numRows, PublisherConfig config)
     {
         string sql = @"
             UPDATE jobs
             SET processed = :processed,
             processed_at = :processed_at
-            WHERE id IN (SELECT id
+            WHERE id IN (
+                SELECT id
                 FROM jobs
                 WHERE processed = false
                 AND fire_at AT TIME ZONE 'UTC' > :lookback
                 AND fire_at AT TIME ZONE 'UTC' < :lookahead
+                AND id % :consumer_count = :consumer_index
                 ORDER BY fire_at ASC
                 LIMIT :limit
             )
@@ -30,8 +33,10 @@ public class JobRespository : IJobRespository
         NpgsqlCommand update = new NpgsqlCommand(sql, conn);
         update.Parameters.AddWithValue(":processed", true);
         update.Parameters.AddWithValue(":processed_at", DateTimeOffset.UtcNow);
-        update.Parameters.AddWithValue(":lookback", GetLookbackDateUtc(lookbackSeconds));
-        update.Parameters.AddWithValue(":lookahead", GetLookaheadDateUtc(lookaheadSeconds));
+        update.Parameters.AddWithValue(":lookback", GetLookbackDateUtc(config.LookbackSeconds));
+        update.Parameters.AddWithValue(":lookahead", GetLookaheadDateUtc(config.LookaheadSeconds));
+        update.Parameters.AddWithValue(":consumer_count", config.ConsumerCount);
+        update.Parameters.AddWithValue(":consumer_index", config.ConsumerIndex);
         update.Parameters.AddWithValue(":limit", numRows);
 
         using (var reader = update.ExecuteReader())
