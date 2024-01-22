@@ -1,0 +1,48 @@
+## This Compose file is for testing purposes only
+version: "3.9"
+
+services:
+    # Local instance of postgres, for testing and local development
+    postgres:
+        image: postgres:14
+        container_name: postgres
+        volumes:
+            - postgres_data:/var/lib/postgresql/data/
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_SERVER: postgres
+            POSTGRES_PORT: 5432
+            POSTGRES_DB: postgres
+            TZ: UTC
+            PGTZ: UTC
+        networks:
+            - testing
+        ports:
+            - 5432:5432
+
+    ## Local instance of mosquitto, for testing and local development
+    mosquitto: &mosquitto
+        build:
+            context: ./
+            dockerfile: Dockerfile.mosquitto
+        hostname: mosquitto
+        container_name: mosquitto
+        environment:
+            ENV: 'dev'
+            MOSQUITTO_USER: 'test'
+            MOSQUITTO_PASSWORD: 'test'
+        restart: on-failure
+        networks:
+            - testing
+        ports:
+            - 1883:1883
+        # volumes:
+        #     - ./mosquitto.conf:/etc/mosquitto/mosquitto.conf
+
+networks:
+    testing:
+
+volumes:
+    postgres_data:
+    mosquitto:

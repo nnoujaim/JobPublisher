@@ -1,0 +1,27 @@
+# Use the official Eclipse Mosquitto image
+FROM eclipse-mosquitto:2.0.18
+
+# Copy Mosquitto config file
+COPY ./mosquitto.conf /mosquitto/config/mosquitto.conf
+
+# Copy the entrypoint script into the container
+COPY ./mosquitto_entrypoint.sh /mosquitto_entrypoint.sh
+
+# Set the script to be executable
+RUN chmod +x /mosquitto_entrypoint.sh
+
+# Set environment variables for timezone
+ENV TZ=UTC
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install tzdata package
+RUN apk add --no-cache tzdata
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+RUN echo $PORT
+
+# Expose MQTT port
+EXPOSE $PORT
+
+# Set the entrypoint script as the default command
+ENTRYPOINT ["/mosquitto_entrypoint.sh"]
