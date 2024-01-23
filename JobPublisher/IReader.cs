@@ -1,4 +1,3 @@
-using JobPublisher.Repository;
 using Npgsql;
 using JobPublisher.Dto;
 

@@ -1,14 +1,19 @@
+using JobPublisher.Utility;
+using Microsoft.Extensions.Logging;
+
 namespace JobPublisher;
 
 public class LoopHandler
 {
+    private readonly ILogger Logger;
     private readonly JobHandler Handler;
     private readonly PublisherConfig Config;
 
-    public LoopHandler(JobHandler handler, PublisherConfig config)
+    public LoopHandler(ILogger logger, JobHandler handler, PublisherConfig config)
     {
         Handler = handler;
         Config = config;
+        Logger = logger;
     }
 
     public async Task LoopForever()
@@ -17,7 +22,7 @@ public class LoopHandler
         {
             while (!Handler.ReadLimitReached())
             {
-                Console.WriteLine("Read and publish at: " + DateTime.Now.ToString(TimeUtility.Format));
+                Logger.LogInformation("Reading and publishing jobs at {time}", DateTime.Now.ToString(TimeUtility.Format));
                 await Handler.ReadAndPublish();
                 await Task.Delay(Config.LoopFrequencyMs);
             }

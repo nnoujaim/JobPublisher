@@ -1,12 +1,6 @@
-﻿using JobPublisher;
-using JobPublisher.Database;
+﻿using JobPublisher.Database;
 using JobPublisher.Mqtt;
-using JobPublisher.Repository;
-
-using MQTTnet;
-using MQTTnet.Client;
-using MQTTnet.Formatter;
-
+using Microsoft.Extensions.Logging;
 
 namespace JobPublisher.LocalApp;
 
@@ -24,7 +18,10 @@ class Program
         MqttClientConfig mqttConfig = new MqttClientConfig("test", "test", 1883, "localhost");
         PublisherConfig publisherConfig = new PublisherConfig(jobsPerRead, loopFrequencyMs, consumerCount, consumerIndex, maxReads);
 
-        JobPublisher publisher = new JobPublisher(pgConfig, mqttConfig, publisherConfig);
+        using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
+        ILogger logger = factory.CreateLogger("Job-Publisher");
+
+        JobPublisher publisher = new JobPublisher(logger, pgConfig, mqttConfig, publisherConfig);
         await publisher.Run();
     }
 }

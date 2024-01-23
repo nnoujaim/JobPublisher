@@ -55,6 +55,22 @@ INSERT INTO jobs (
 ('job/test/topic', '{"Job": "TestValue1"}', now() + INTERVAL '3 second', false, null),
 ('job/test/topic', '{"Job": "7"}', now() + INTERVAL '7 second', false, null);
 
+-- Bulk add for stress test
+INSERT INTO jobs (
+	topic,
+	payload,
+	fire_at,
+	processed,
+	processed_at
+)
+SELECT
+	'job/test/topic',
+	'{"Job": "' || x.test_data || '"}',
+	now(),
+	false,
+	null
+  FROM generate_series(1,2) AS x(test_data);
+
 ------ Read test data -------
 SELECT COUNT(*) FROM jobs;
 SELECT COUNT(*) FROM jobs WHERE processed = false;

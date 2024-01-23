@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace JobPublisher;
+namespace JobPublisher.Utility;
 
 public static class TimeUtility
 {

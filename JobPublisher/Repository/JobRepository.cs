@@ -1,6 +1,6 @@
 using Npgsql;
 using JobPublisher.Dto;
-using JobPublisher;
+using JobPublisher.Utility;
 using System.Numerics;
 
 namespace JobPublisher.Repository;
