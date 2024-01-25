@@ -2,8 +2,6 @@
 using JobPublisher.Mqtt;
 using JobPublisher.Config;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Diagnostics;
 
 namespace JobPublisher.LocalApp;
 
@@ -17,8 +15,19 @@ class Program
         int consumerIndex = int.Parse(args[3]);
         int maxReads = int.Parse(args[4]);
 
-        PostgresConfig pgConfig = new PostgresConfig("postgres", "postgres", 5432, "localhost", "postgres");
-        MqttClientConfig mqttConfig = new MqttClientConfig("test", "test", 1883, "localhost");
+        string dbUser = Environment.GetEnvironmentVariable("POSTGRES_USER");
+        string dbPass = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
+        int dbPort = int.Parse(Environment.GetEnvironmentVariable("POSTGRES_PASSWORD"));
+        string dbServer = Environment.GetEnvironmentVariable("POSTGRES_SERVER");
+        string dbName = Environment.GetEnvironmentVariable("POSTGRES_DB");
+
+        string mqttUser = Environment.GetEnvironmentVariable("MOSQUITTO_USER");
+        string mqttPass = Environment.GetEnvironmentVariable("MOSQUITTO_PASSWORD");
+        int mqttPort = int.Parse(Environment.GetEnvironmentVariable("MOSQUITTO_PORT"));
+        string mqttServer = Environment.GetEnvironmentVariable("MOSQUITTO_HOST");
+
+        PostgresConfig pgConfig = new PostgresConfig(dbUser, dbPass, dbPort, dbServer, dbName);
+        MqttClientConfig mqttConfig = new MqttClientConfig(mqttUser, mqttPass, mqttPort, mqttServer);
         PublisherConfig publisherConfig = new PublisherConfig(jobsPerRead, loopFrequencyMs, consumerCount, consumerIndex, maxReads);
 
         using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());

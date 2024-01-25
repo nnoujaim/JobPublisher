@@ -69,7 +69,7 @@ SELECT
 	now(),
 	false,
 	null
-  FROM generate_series(1,20) AS x(test_data);
+FROM generate_series(1,20000) AS x(test_data);
 
 ------ Read test data -------
 SELECT COUNT(*) FROM jobs;

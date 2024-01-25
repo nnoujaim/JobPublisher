@@ -1,7 +1,126 @@
 ## This Compose file is for testing purposes only
 version: "3.9"
 
+x-build-args: &build-args
+    JOBS_PER_READ: 100
+    LOOP_FREQUENCY: 50
+    NUMBER_CONSUMERS: 1
+    CONSUMER_INDEX: 1
+    MAX_READS: 0 # Means infinite
+
+x-test-env: &test-env
+    ENV: 'dev'
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_SERVER: postgres
+    POSTGRES_PORT: 5432
+    POSTGRES_DB: postgres
+    MOSQUITTO_USER: test
+    MOSQUITTO_PASSWORD: test
+    MOSQUITTO_HOST: mosquitto
+    MOSQUITTO_PORT: 1883
+
+x-logging: &logging
+    driver: json-file
+    options:
+        max-file: '5'
+        max-size: '30m'
+
 services:
+    job-publisher-single:
+        container_name: job-publisher-single
+        build:
+            context: ./
+            dockerfile: Dockerfile.app
+            args:
+                <<: *build-args
+        environment:
+            <<: *test-env
+        networks:
+            - testing
+        logging:
+            <<: *logging
+
+    job-publisher-parallelized-one:
+        container_name: job-publisher-parallelized-one
+        build:
+            context: ./
+            dockerfile: Dockerfile.app
+            args:
+                <<: *build-args
+                NUMBER_CONSUMERS: 5
+                CONSUMER_INDEX: 1
+        environment:
+            <<: *test-env
+        networks:
+            - testing
+        logging:
+            <<: *logging
+
+    job-publisher-parallelized-two:
+        container_name: job-publisher-parallelized-two
+        build:
+            context: ./
+            dockerfile: Dockerfile.app
+            args:
+                <<: *build-args
+                NUMBER_CONSUMERS: 5
+                CONSUMER_INDEX: 2
+        environment:
+            <<: *test-env
+        networks:
+            - testing
+        logging:
+            <<: *logging
+
+    job-publisher-parallelized-three:
+        container_name: job-publisher-parallelized-three
+        build:
+            context: ./
+            dockerfile: Dockerfile.app
+            args:
+                <<: *build-args
+                NUMBER_CONSUMERS: 5
+                CONSUMER_INDEX: 3
+        environment:
+            <<: *test-env
+        networks:
+            - testing
+        logging:
+            <<: *logging
+
+    job-publisher-parallelized-four:
+        container_name: job-publisher-parallelized-four
+        build:
+            context: ./
+            dockerfile: Dockerfile.app
+            args:
+                <<: *build-args
+                NUMBER_CONSUMERS: 5
+                CONSUMER_INDEX: 4
+        environment:
+            <<: *test-env
+        networks:
+            - testing
+        logging:
+            <<: *logging
+
+    job-publisher-parallelized-five:
+        container_name: job-publisher-parallelized-five
+        build:
+            context: ./
+            dockerfile: Dockerfile.app
+            args:
+                <<: *build-args
+                NUMBER_CONSUMERS: 5
+                CONSUMER_INDEX: 5
+        environment:
+            <<: *test-env
+        networks:
+            - testing
+        logging:
+            <<: *logging
+
     # Local instance of postgres, for testing and local development
     postgres:
         image: postgres:14
@@ -9,17 +128,15 @@ services:
         volumes:
             - postgres_data:/var/lib/postgresql/data/
         environment:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_SERVER: postgres
-            POSTGRES_PORT: 5432
-            POSTGRES_DB: postgres
+            <<: *test-env
             TZ: UTC
             PGTZ: UTC
         networks:
             - testing
         ports:
             - 5432:5432
+        logging:
+            <<: *logging
 
     ## Local instance of mosquitto, for testing and local development
     mosquitto: &mosquitto
@@ -29,16 +146,14 @@ services:
         hostname: mosquitto
         container_name: mosquitto
         environment:
-            ENV: 'dev'
-            MOSQUITTO_USER: 'test'
-            MOSQUITTO_PASSWORD: 'test'
+            <<: *test-env
         restart: on-failure
         networks:
             - testing
         ports:
             - 1883:1883
-        # volumes:
-        #     - ./mosquitto.conf:/etc/mosquitto/mosquitto.conf
+        logging:
+            <<: *logging
 
 networks:
     testing:
