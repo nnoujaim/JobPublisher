@@ -1,4 +1,4 @@
-namespace JobPublisher;
+namespace JobPublisher.Config;
 
 public class PublisherConfig
 {

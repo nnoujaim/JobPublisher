@@ -1,6 +1,6 @@
 using JobPublisher.Dto;
 
-namespace JobPublisher;
+namespace JobPublisher.Service;
 
 public interface IWriter
 {

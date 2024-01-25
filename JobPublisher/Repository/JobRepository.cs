@@ -2,6 +2,7 @@ using Npgsql;
 using JobPublisher.Dto;
 using JobPublisher.Utility;
 using System.Numerics;
+using JobPublisher.Config;
 
 namespace JobPublisher.Repository;
 

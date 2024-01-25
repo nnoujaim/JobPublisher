@@ -1,6 +1,8 @@
 using JobPublisher.Database;
 using JobPublisher.Mqtt;
 using JobPublisher.Repository;
+using JobPublisher.Config;
+using JobPublisher.Service;
 using Microsoft.Extensions.Logging;
 using MQTTnet;
 

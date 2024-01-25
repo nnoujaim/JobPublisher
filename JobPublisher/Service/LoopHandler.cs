@@ -1,7 +1,8 @@
 using JobPublisher.Utility;
+using JobPublisher.Config;
 using Microsoft.Extensions.Logging;
 
-namespace JobPublisher;
+namespace JobPublisher.Service;
 
 public class LoopHandler
 {

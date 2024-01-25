@@ -3,8 +3,10 @@ using Npgsql;
 using JobPublisher.Dto;
 using Microsoft.Extensions.Logging;
 using JobPublisher.Utility;
+using System.Diagnostics;
+using JobPubisher.Metrics;
 
-namespace JobPublisher;
+namespace JobPublisher.Service;
 
 public class JobHandler
 {
@@ -12,31 +14,41 @@ public class JobHandler
     private readonly IPostgresConnectionFactory ConnectionFactory;
     private readonly IReader Reader;
     private readonly IWriter Writer;
+    private readonly IMetricsPublisher MetricsPublisher;
 
-    public JobHandler(ILogger logger, IPostgresConnectionFactory connectionFactory, IReader reader, IWriter writer)
+    public JobHandler(ILogger logger, IPostgresConnectionFactory connectionFactory, IReader reader, IWriter writer, IMetricsPublisher? metricPublisher = null)
     {
         Logger = logger;
         ConnectionFactory = connectionFactory;
         Reader = reader;
         Writer = writer;
+        MetricsPublisher = metricPublisher ?? new ConsoleMetricsPublisher();
     }
 
     public async Task ReadAndPublish()
     {
+        Stopwatch timer = Stopwatch.StartNew();
         using (NpgsqlConnection conn = ConnectionFactory.GetConnection())
         {
             conn.Open();
+            MetricsPublisher.PublishMetric("job-publisher", "open-connection", timer);
             NpgsqlTransaction tx = conn.BeginTransaction();
             try
             {
+                Stopwatch readTimer = Stopwatch.StartNew();
                 JobCollection? jobs = Reader.Read(conn);
                 if (jobs is not null)
                 {
+                    MetricsPublisher.PublishMetric("job-publisher", "read-jobs", timer, jobs.GetJobCount(), Tuple.Create("num-jobs", jobs.GetJobCount().ToString()));
+                    Stopwatch publishTimer = Stopwatch.StartNew();
                     await Writer.WriteAsync(jobs);
+                    MetricsPublisher.PublishMetric("job-publisher", "publish-jobs", timer, jobs.GetJobCount(), Tuple.Create("num-jobs", jobs.GetJobCount().ToString()));
                     tx.Commit();
-                    Logger.LogInformation("Read {count} jobs at {time}", jobs.GetJobCount(), DateTime.Now.ToString(TimeUtility.Format));
+                    Logger.LogInformation("Read and published {count} jobs at {time}", jobs.GetJobCount(), DateTime.Now.ToString(TimeUtility.Format));
                 }
-                else {
+                else
+                {
+                    MetricsPublisher.PublishMetric("job-publisher", "read-jobs", timer, 1, Tuple.Create("num-jobs", "0"));
                     Logger.LogInformation("Read no jobs at {time}", DateTime.Now.ToString(TimeUtility.Format));
                 }
             }
@@ -47,6 +59,7 @@ public class JobHandler
                 throw new ReadAndPublishException("Exception occured while reading and publishing jobs", exception);
             }
             conn.Close();
+            MetricsPublisher.PublishMetric("job-publisher", "read-and-publish", timer);
         }
     }
 

@@ -2,7 +2,7 @@ using JobPublisher.Dto;
 using JobPublisher.Mqtt;
 using MQTTnet;
 
-namespace JobPublisher;
+namespace JobPublisher.Service;
 
 public class Writer : IWriter
 {

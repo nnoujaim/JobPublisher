@@ -2,7 +2,7 @@ using Npgsql;
 
 namespace JobPublisher.Database;
 
-public interface IPostgresConnectionFactory
+public interface IPostgresConnectionFactory : IDisposable
 {
     public NpgsqlConnection GetConnection();
 }

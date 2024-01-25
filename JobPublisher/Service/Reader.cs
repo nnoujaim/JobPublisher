@@ -2,8 +2,9 @@
 using Npgsql;
 using JobPublisher.Dto;
 using System.Numerics;
+using JobPublisher.Config;
 
-namespace JobPublisher;
+namespace JobPublisher.Service;
 
 public class Reader : IReader
 {

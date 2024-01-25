@@ -2,7 +2,7 @@ using Npgsql;
 
 namespace JobPublisher.Database;
 
-public class PostgresConnectionFactory : IPostgresConnectionFactory
+public class PostgresConnectionFactory : IPostgresConnectionFactory, IDisposable
 {
     public NpgsqlDataSource DataSource { get; set; }
 
@@ -14,5 +14,10 @@ public class PostgresConnectionFactory : IPostgresConnectionFactory
     public NpgsqlConnection GetConnection()
     {
         return DataSource.CreateConnection();
+    }
+
+    public void Dispose()
+    {
+        DataSource.Dispose();
     }
 }
