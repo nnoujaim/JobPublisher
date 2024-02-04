@@ -9,7 +9,7 @@
     <PackageId>JobPublisher</PackageId>
     <Version>1.0.0</Version>
     <Authors>Nicholas Noujaim</Authors>
-    <Company>NoujaimTech</Company>
+    <Company>NoujaimSoftwareCO</Company>
     <Description>Scalable and performant IOT pipeline facilitator</Description>
     <PackageTags>IOT;Postgres;MQTT;</PackageTags>
 
