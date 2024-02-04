@@ -3,23 +3,24 @@ using Npgsql;
 using JobPublisher.Dto;
 using System.Numerics;
 using JobPublisher.Config;
+using JobPublisher.Database;
 
 namespace JobPublisher.Service;
 
 public class Reader : IReader
 {
-    private readonly IJobRespository Repository;
+    private readonly IJobRepository Repository;
     public BigInteger JobsRead { get; private set; } = 0;
     public int ReadCount { get; private set; } = 0;
     public PublisherConfig Config;
 
-    public Reader(IJobRespository respository, PublisherConfig config)
+    public Reader(IJobRepository respository, PublisherConfig config)
     {
         Repository = respository;
         Config = config;
     }
 
-    public JobCollection? Read(NpgsqlConnection conn)
+    public JobCollection? Read(IConnection conn)
     {
         JobCollection? jobs = Repository.GetAndResolveJobs(conn, GetRowsToRead(), Config);
         if (jobs is not null) IncrementCounts(jobs);

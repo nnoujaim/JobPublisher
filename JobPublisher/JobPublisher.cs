@@ -30,7 +30,7 @@ public class JobPublisher
         try
         {
             PostgresConnectionFactory connectionFactory = new PostgresConnectionFactory(PgConfig);
-            Reader reader = new Reader(new JobRespository(), PublisherConfig);
+            Reader reader = new Reader(new JobRepository(), PublisherConfig);
 
             MqttConnection mqtt = new MqttConnection(new MqttFactory(), MqttConfig);
             await mqtt.Connect();

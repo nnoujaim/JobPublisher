@@ -3,12 +3,20 @@ using JobPublisher.Dto;
 using JobPublisher.Utility;
 using System.Numerics;
 using JobPublisher.Config;
+using JobPublisher.Database;
 
 namespace JobPublisher.Repository;
 
-public class JobRespository : IJobRespository
+public class JobRepository : IJobRepository
 {
-    public JobCollection? GetAndResolveJobs(NpgsqlConnection conn, int numRows, PublisherConfig config)
+    public ITimeUtility TimeUtility;
+
+    public JobRepository(ITimeUtility? timeUtility = null)
+    {
+        TimeUtility = timeUtility ?? new TimeUtility();
+    }
+
+    public JobCollection? GetAndResolveJobs(IConnection conn, int numRows, PublisherConfig config)
     {
         string sql = @"
             UPDATE jobs
@@ -18,8 +26,8 @@ public class JobRespository : IJobRespository
                 SELECT id
                 FROM jobs
                 WHERE processed = false
-                AND fire_at AT TIME ZONE 'UTC' > :lookback
-                AND fire_at AT TIME ZONE 'UTC' < :lookahead
+                AND fire_at > :lookback
+                AND fire_at < :lookahead
                 AND id % :consumer_count = :consumer_index
                 ORDER BY fire_at ASC
                 LIMIT :limit
@@ -31,7 +39,7 @@ public class JobRespository : IJobRespository
                 processed,
                 processed_at;
         ";
-        NpgsqlCommand update = new NpgsqlCommand(sql, conn);
+        NpgsqlCommand update = new NpgsqlCommand(sql, conn.GetConnection());
         update.Parameters.AddWithValue(":processed", true);
         update.Parameters.AddWithValue(":processed_at", DateTimeOffset.UtcNow);
         update.Parameters.AddWithValue(":lookback", GetLookbackDateUtc(config.LookbackSeconds));
@@ -47,14 +55,15 @@ public class JobRespository : IJobRespository
             JobCollection jobs = new JobCollection();
             while (reader.Read())
             {
+
                 jobs.LoadJob(
                     new Job(
                         new BigInteger(reader.GetInt64(0)),
                         reader.GetString(1),
                         reader.GetString(2),
-                        reader.GetDateTime(3).ToString(TimeUtility.Format),
+                        reader.GetDateTime(3).ToString(TimeUtility.GetFormat()),
                         reader.GetBoolean(4),
-                        reader.GetDateTime(5).ToString(TimeUtility.Format)
+                        reader.GetDateTime(5).ToString(TimeUtility.GetFormat())
                     )
                 );
             }
@@ -64,11 +73,11 @@ public class JobRespository : IJobRespository
 
     private DateTimeOffset GetLookbackDateUtc(int seconds)
     {
-        return DateTimeOffset.UtcNow.Add(TimeSpan.FromSeconds((double)-seconds));
+        return TimeUtility.GetTimeOffset(-seconds);
     }
 
     private DateTimeOffset GetLookaheadDateUtc(int seconds)
     {
-        return DateTimeOffset.UtcNow.Add(TimeSpan.FromSeconds((double)seconds));
+        return TimeUtility.GetTimeOffset(seconds);
     }
 }

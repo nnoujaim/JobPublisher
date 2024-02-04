@@ -4,7 +4,7 @@ using JobPublisher.Dto;
 using Microsoft.Extensions.Logging;
 using JobPublisher.Utility;
 using System.Diagnostics;
-using JobPubisher.Metrics;
+using JobPublisher.Metrics;
 
 namespace JobPublisher.Service;
 
@@ -28,7 +28,7 @@ public class JobHandler
     public async Task ReadAndPublish()
     {
         Stopwatch timer = Stopwatch.StartNew();
-        using (NpgsqlConnection conn = ConnectionFactory.GetConnection())
+        using (Connection conn = ConnectionFactory.GetConnection())
         {
             conn.Open();
             MetricsPublisher.PublishMetric("job-publisher", "open-connection", timer);

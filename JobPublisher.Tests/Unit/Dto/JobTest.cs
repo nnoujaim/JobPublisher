@@ -1,4 +1,5 @@
 using JobPublisher.Dto;
+using JobPublisher.Utility;
 using System.Collections;
 using System.Numerics;
 
@@ -8,9 +9,12 @@ public class JobTest
 {
     [Theory]
     [ClassData(typeof(SingleJobFixture))]
-    public void TestJobPopulates(BigInteger id, string topic, string payload, string fireAt, bool processed, string? processedAt, string fireAtUtc, string? processedAtUtc)
+    public void TestJobPopulatesFieldsCorrectly(BigInteger id, string topic, string payload, string fireAt, bool processed, string? processedAt, string fireAtUtc, string? processedAtUtc)
     {
+        // Act
         Job job = new(id, topic, payload, fireAt, processed, processedAt);
+
+        // Assert
         Assert.Equal(id, job.Id);
         Assert.Equal(topic, job.Topic);
         Assert.Equal(payload, job.Payload);

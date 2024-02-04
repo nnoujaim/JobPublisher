@@ -12,13 +12,14 @@ CREATE TABLE jobs (
 	id SERIAL PRIMARY KEY,
     topic VARCHAR(1000) NOT NULL,
     payload VARCHAR(5000) NOT NULL,
-    fire_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    fire_at TIMESTAMPTZ NOT NULL,
     processed BOOLEAN NOT NULL,
-    processed_at TIMESTAMP WITH TIME ZONE NULL
+    processed_at TIMESTAMPTZ NULL
 );
-ALTER TABLE jobs
-ALTER COLUMN fire_at TYPE TIMESTAMP WITH TIME ZONE USING fire_at AT TIME ZONE 'UTC',
-ALTER COLUMN processed_at TYPE TIMESTAMP WITH TIME ZONE USING processed_at AT TIME ZONE 'UTC';
+
+CREATE INDEX ix_jobs_fire_at ON jobs (fire_at);
+CREATE INDEX ix_jobs_processed_fire_at ON jobs (processed, fire_at);
+CREATE INDEX ix_jobs_processed_fire_at_id ON jobs (processed, fire_at, id) INCLUDE (topic, payload);
 ```
 
 ALL TIMESTAMPS NEED TO BE IN UTC!!!

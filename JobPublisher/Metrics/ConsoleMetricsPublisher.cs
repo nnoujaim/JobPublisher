@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace JobPubisher.Metrics;
+namespace JobPublisher.Metrics;
 
 public class ConsoleMetricsPublisher : IMetricsPublisher
 {

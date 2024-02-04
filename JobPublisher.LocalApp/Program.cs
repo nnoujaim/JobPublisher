@@ -15,9 +15,10 @@ class Program
         int consumerIndex = int.Parse(args[3]);
         int maxReads = int.Parse(args[4]);
 
+        #nullable disable
         string dbUser = Environment.GetEnvironmentVariable("POSTGRES_USER");
         string dbPass = Environment.GetEnvironmentVariable("POSTGRES_PASSWORD");
-        int dbPort = int.Parse(Environment.GetEnvironmentVariable("POSTGRES_PASSWORD"));
+        int dbPort = int.Parse(Environment.GetEnvironmentVariable("POSTGRES_PORT"));
         string dbServer = Environment.GetEnvironmentVariable("POSTGRES_SERVER");
         string dbName = Environment.GetEnvironmentVariable("POSTGRES_DB");
 
@@ -29,6 +30,7 @@ class Program
         PostgresConfig pgConfig = new PostgresConfig(dbUser, dbPass, dbPort, dbServer, dbName);
         MqttClientConfig mqttConfig = new MqttClientConfig(mqttUser, mqttPass, mqttPort, mqttServer);
         PublisherConfig publisherConfig = new PublisherConfig(jobsPerRead, loopFrequencyMs, consumerCount, consumerIndex, maxReads);
+        #nullable enable
 
         using ILoggerFactory factory = LoggerFactory.Create(builder => builder.AddConsole());
         ILogger logger = factory.CreateLogger("Job-Publisher");

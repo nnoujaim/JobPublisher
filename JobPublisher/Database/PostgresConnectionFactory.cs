@@ -11,9 +11,9 @@ public class PostgresConnectionFactory : IPostgresConnectionFactory, IDisposable
         DataSource = NpgsqlDataSource.Create(config.GetConnectionString());
     }
 
-    public NpgsqlConnection GetConnection()
+    public Connection GetConnection()
     {
-        return DataSource.CreateConnection();
+        return new Connection(DataSource.CreateConnection());
     }
 
     public void Dispose()

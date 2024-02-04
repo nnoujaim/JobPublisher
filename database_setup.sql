@@ -11,13 +11,10 @@ CREATE TABLE jobs (
 	id SERIAL PRIMARY KEY,
     topic VARCHAR(1000) NOT NULL,
     payload VARCHAR(5000) NOT NULL,
-    fire_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    fire_at TIMESTAMPTZ NOT NULL,
     processed BOOLEAN NOT NULL,
-    processed_at TIMESTAMP WITH TIME ZONE NULL
+    processed_at TIMESTAMPTZ NULL
 );
-ALTER TABLE jobs
-ALTER COLUMN fire_at TYPE TIMESTAMP WITH TIME ZONE USING fire_at AT TIME ZONE 'UTC',
-ALTER COLUMN processed_at TYPE TIMESTAMP WITH TIME ZONE USING processed_at AT TIME ZONE 'UTC';
 
 CREATE INDEX ix_jobs_fire_at ON jobs (fire_at);
 CREATE INDEX ix_jobs_processed_fire_at ON jobs (processed, fire_at);
@@ -69,14 +66,28 @@ SELECT
 	now(),
 	false,
 	null
-FROM generate_series(1,20000) AS x(test_data);
+FROM generate_series(1, 20000) AS x(test_data);
+
+-- Bulk add for stress test with delay
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN SELECT generate_series(1, 10000) AS test_data
+    LOOP
+        INSERT INTO jobs (topic, payload, fire_at, processed, processed_at)
+        VALUES ('job/test/topic', '{"Job": "' || r.test_data || '"}', now(), false, null);
+
+        PERFORM pg_sleep(.1); -- Delay of 1 second
+    END LOOP;
+END $$;
 
 ------ Read test data -------
 SELECT COUNT(*) FROM jobs;
 SELECT COUNT(*) FROM jobs WHERE processed = false;
 
 SELECT * FROM jobs;
-SELECT * FROM jobs ORDER BY fire_at;
+SELECT * FROM jobs ORDER BY fire_at ASC;
 SELECT * FROM jobs ORDER BY id;
 SELECT
 	id,
