@@ -4,12 +4,27 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>JobPublisher</AssemblyName>
+    <RootNamespace>JobPublisher</RootNamespace>
+    <PackageId>JobPublisher</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Nicholas Noujaim</Authors>
+    <Company>NoujaimTech</Company>
+    <Description>Scalable and performant IOT pipeline facilitator</Description>
+    <PackageTags>IOT;Postgres;MQTT;</PackageTags>
+
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseExpression>GNU GENERAL PUBLIC LICENSE V3</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MQTTnet" Version="4.3.3.952" />
     <PackageReference Include="Npgsql" Version="8.0.1" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath=""/>
   </ItemGroup>
 
 </Project>
